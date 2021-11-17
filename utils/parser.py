@@ -18,6 +18,14 @@ def get_parser():
     parser.add_argument('--max_numb', type = int, default = 30000, help = '')
     parser.add_argument('--max_seq_len', type = int, default = 16, help = '')
 
+    # For Train
+    parser.add_argument('--batch_size', type = int, default = 64, help = '')
+    parser.add_argument('--num_epochs', type = int, default = 10, help = '')
+
+    parser.add_argument('--grad_clip', type = float, default = 0.5, help = '')
+
+    return parser
+
 if __name__ == '__main__':
     parser = get_parser()
     option = parser.parse_args()

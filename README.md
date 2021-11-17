@@ -9,3 +9,11 @@ Note: The project refers to <https://github.com/bentrevett/pytorch-seq2seq>
 ```shell
 PYTHONPATH=. python dataprocess/process.py
 ```
+
+### Unit Test
+
+* For loader
+
+```shell
+PYTHONPATH=. python loaders/loader.py
+```
