@@ -17,3 +17,9 @@ PYTHONPATH=. python dataprocess/process.py
 ```shell
 PYTHONPATH=. python loaders/loader.py
 ```
+
+* For module
+
+```shell
+PYTHONPATH=. python modules/module1.py
+```

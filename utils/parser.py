@@ -6,7 +6,7 @@ def get_parser():
     # For Basic
     parser.add_argument('--name', default = 'main', help = '')
 
-    # For Data
+    # For Loader
     parser.add_argument('--sources_path', default = 'datasources', help = '')
     parser.add_argument('--targets_path', default = 'datatargets', help = '')
 
@@ -17,6 +17,26 @@ def get_parser():
     parser.add_argument('--min_freq', type = int, default = 7, help = '')
     parser.add_argument('--max_numb', type = int, default = 30000, help = '')
     parser.add_argument('--max_seq_len', type = int, default = 16, help = '')
+
+    # For Module
+    parser.add_argument('--rnn_type', choices = ['rnn', 'gru','lstm'], default = 'rnn', help = '')
+
+    parser.add_argument('--enc_emb_dim', type = int, default = 256, help = '')
+    parser.add_argument('--dec_emb_dim', type = int, default = 256, help = '')
+    parser.add_argument('--enc_hid_dim', type = int, default = 512, help = '')
+    parser.add_argument('--dec_hid_dim', type = int, default = 512, help = '')
+    parser.add_argument('--enc_dropout', type = float, default = 0.5, help = '')
+    parser.add_argument('--dec_dropout', type = float, default = 0.5, help = '')
+
+    parser.add_argument('--enc_n_layers_group1', type = int, default = 1, help = '')
+    parser.add_argument('--dec_n_layers_group1', type = int, default = 1, help = '')
+    parser.add_argument('--enc_n_layers_group2', type = int, default = 2, help = '')
+    parser.add_argument('--dec_n_layers_group2', type = int, default = 2, help = '')
+
+    parser.add_argument('--enc_n_directions_group1', type = int, default = 1, help = '')
+    parser.add_argument('--dec_n_directions_group1', type = int, default = 1, help = '')
+    parser.add_argument('--enc_n_directions_group2', type = int, default = 2, help = '')
+    parser.add_argument('--dec_n_directions_group2', type = int, default = 2, help = '')
 
     # For Train
     parser.add_argument('--batch_size', type = int, default = 64, help = '')
