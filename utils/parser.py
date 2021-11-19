@@ -39,10 +39,12 @@ def get_parser():
     parser.add_argument('--dec_n_directions_group2', type = int, default = 2, help = '')
 
     # For Train
+    parser.add_argument('--module', type = int, choices = range(1, 7), default = 1, help = '')
+
     parser.add_argument('--batch_size', type = int, default = 64, help = '')
     parser.add_argument('--num_epochs', type = int, default = 10, help = '')
 
-    parser.add_argument('--grad_clip', type = float, default = 0.5, help = '')
+    parser.add_argument('--grad_clip', type = float, default = 1, help = '')
 
     return parser
 
