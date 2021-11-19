@@ -19,9 +19,7 @@ class Encoder(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.embedding = nn.Embedding(vocab_size, emb_dim)
 
-        assert rnn_type in ['rnn', 'gru', 'lstm']
         self.rnn_type = rnn_type
-
         if rnn_type == 'rnn':
             self.rnn = nn.RNN (emb_dim, enc_hid_dim, num_layers = n_layers, bidirectional = True if n_directions == 2 else False)
         if rnn_type == 'gru':
@@ -29,29 +27,45 @@ class Encoder(nn.Module):
         if rnn_type == 'lstm':
             self.rnn = nn.LSTM(emb_dim, enc_hid_dim, num_layers = n_layers, bidirectional = True if n_directions == 2 else False)
 
-        self.linear = nn.Linear(enc_hid_dim * 2, dec_hid_dim)
+        self.linear = nn.Linear(enc_hid_dim * n_layers * n_directions, dec_hid_dim)
 
     def forward(self, source):
+        '''
+        Params:
+            source: Torch LongTensor (src_seq_len, batch_size)
+        Return:
+            outputs: Torch LongTensor (src_seq_len, batch_size, n_directions * enc_hid_dim)
+            hidden : Torch LongTensor (batch_size, dec_hid_dim) if rnn_type == 'rnn' or rnn_type == 'gru'
+                    (
+                        Torch LongTensor (batch_size, dec_hid_dim),
+                        Torch LongTensor (batch_size, dec_hid_dim)
+                    ) if rnn_type == 'lstm'
+        '''
         embedded = self.dropout(self.embedding(source))
         outputs, hidden = self.rnn(embedded)
-
         if self.rnn_type == 'rnn' or self.rnn_type == 'gru':
-            hidden = torch.tanh(self.linear(torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim = 1)))
+            hidden = torch.tanh(self.linear(torch.cat([hidden[i] for i in range(hidden.shape[0])], dim = -1)))
         if self.rnn_type == 'lstm':
             hidden = (
-                torch.tanh(self.linear(torch.cat((hidden[0][-2,:,:], hidden[0][-1,:,:]), dim = 1))),
-                torch.tanh(self.linear(torch.cat((hidden[0][-2,:,:], hidden[0][-1,:,:]), dim = 1))) # make sense?
+                torch.tanh(self.linear(torch.cat([hidden[0][i] for i in range(hidden[0].shape[0])], dim = -1))),
+                torch.tanh(self.linear(torch.cat([hidden[1][i] for i in range(hidden[1].shape[0])], dim = -1))) # make sense?
             )
-
         return outputs, hidden
 
 class Attention(nn.Module):
-    def __init__(self, enc_hid_dim, dec_hid_dim):
+    def __init__(self, enc_hid_dim, enc_n_directions, dec_hid_dim):
         super(Attention, self).__init__()
-        self.a = nn.Linear(enc_hid_dim * 2 + dec_hid_dim, dec_hid_dim)
-        self.v = nn.Linear(dec_hid_dim , 1 , bias = False)
+        self.a = nn.Linear(enc_hid_dim * enc_n_directions + dec_hid_dim, dec_hid_dim)
+        self.v = nn.Linear(dec_hid_dim , 1, bias = False)
 
     def forward(self, hidden, encoder_outputs):
+        '''
+        Params:
+            hidden : Torch LongTensor (batch_size, dec_hid_dim)
+            outputs: Torch LongTensor (src_seq_len, batch_size, enc_n_directions * enc_hid_dim)
+        Return:
+            attention: Torch LongTensor (batch_size, src_seq_len)
+        '''
         src_len = encoder_outputs.shape[0]
 
         hidden = hidden.unsqueeze(1).repeat(1, src_len, 1)
@@ -66,28 +80,43 @@ class Attention(nn.Module):
 
 class Decoder(nn.Module):
     def __init__( self,
-        rnn_type, vocab_size, emb_dim, enc_hid_dim, dec_hid_dim, n_layers, n_directions, dropout
+        rnn_type, vocab_size, emb_dim, enc_hid_dim, dec_hid_dim, n_layers, enc_n_directions, dec_n_directions, dropout
     ):
         super(Decoder, self).__init__()
 
         self.dropout = nn.Dropout(dropout)
         self.embedding = nn.Embedding(vocab_size, emb_dim)
 
-        self.attention = Attention(enc_hid_dim, dec_hid_dim)
+        self.attention = Attention(enc_hid_dim, enc_n_directions, dec_hid_dim)
 
-        assert rnn_type in ['rnn', 'gru', 'lstm']
         self.rnn_type = rnn_type
-
         if rnn_type == 'rnn':
-            self.rnn = nn.RNN (enc_hid_dim * 2 + emb_dim , dec_hid_dim, num_layers = n_layers, bidirectional = True if n_directions == 2 else False)
+            self.rnn = nn.RNN (enc_hid_dim * enc_n_directions + emb_dim , dec_hid_dim, num_layers = n_layers, bidirectional = True if dec_n_directions == 2 else False)
         if rnn_type == 'gru':
-            self.rnn = nn.GRU (enc_hid_dim * 2 + emb_dim , dec_hid_dim, num_layers = n_layers, bidirectional = True if n_directions == 2 else False)
+            self.rnn = nn.GRU (enc_hid_dim * enc_n_directions + emb_dim , dec_hid_dim, num_layers = n_layers, bidirectional = True if dec_n_directions == 2 else False)
         if rnn_type == 'lstm':
-            self.rnn = nn.LSTM(enc_hid_dim * 2 + emb_dim , dec_hid_dim, num_layers = n_layers, bidirectional = True if n_directions == 2 else False)
+            self.rnn = nn.LSTM(enc_hid_dim * enc_n_directions + emb_dim , dec_hid_dim, num_layers = n_layers, bidirectional = True if dec_n_directions == 2 else False)
 
-        self.linear =nn.Linear(enc_hid_dim * 2 + emb_dim + dec_hid_dim, vocab_size)
+        self.linear =nn.Linear(enc_hid_dim * enc_n_directions + emb_dim + dec_hid_dim, vocab_size)
 
     def forward(self, source, hidden, encoder_outputs):
+        '''
+        Params:
+            source : Torch LongTensor (batch_size)
+            outputs: Torch LongTensor (src_seq_len, batch_size, enc_n_directions * enc_hid_dim)
+            hidden : Torch LongTensor (batch_size, dec_hid_dim) if rnn_type == 'rnn' or rnn_type == 'gru'
+                    (
+                        Torch LongTensor (batch_size, dec_hid_dim),
+                        Torch LongTensor (batch_size, dec_hid_dim)
+                    ) if rnn_type == 'lstm'
+        Return:
+            pred..: Torch LongTensor (batch_size, trg_vocab_size)
+            hidden: Torch LongTensor (batch_size, dec_hid_dim) if rnn_type == 'rnn' or rnn_type == 'gru'
+                    (
+                        Torch LongTensor (batch_size, dec_hid_dim),
+                        Torch LongTensor (batch_size, dec_hid_dim)
+                    ) if rnn_type == 'lstm'
+        '''
         embedded = self.dropout(self.embedding(source.unsqueeze(0)))
 
         if self.rnn_type == 'rnn' or self.rnn_type == 'gru':
@@ -129,8 +158,12 @@ class Seq2Seq(nn.Module):
         super(Seq2Seq, self).__init__()
         self.trg_vocab_size = trg_vocab_size
 
+        assert rnn_type in ['rnn', 'gru', 'lstm']
+        assert dec_n_layers == 1
+        assert dec_n_directions == 1
+
         self.encoder = Encoder(rnn_type, src_vocab_size, enc_emb_dim, enc_hid_dim, dec_hid_dim, enc_n_layers, enc_n_directions, enc_dropout)
-        self.decoder = Decoder(rnn_type, trg_vocab_size, dec_emb_dim, enc_hid_dim, dec_hid_dim, dec_n_layers, dec_n_directions, dec_dropout)
+        self.decoder = Decoder(rnn_type, trg_vocab_size, dec_emb_dim, enc_hid_dim, dec_hid_dim, dec_n_layers, enc_n_directions, dec_n_directions, dec_dropout)
 
     def forward(self, source, target, teacher_forcing_ratio = 0.5):
         trg_len, batch_size = target.shape[0], target.shape[1]
@@ -150,8 +183,8 @@ class Seq2Seq(nn.Module):
 
 def get_module(option, src_vocab_size, trg_vocab_size):
     seq2seq = Seq2Seq(option.rnn_type,
-        src_vocab_size, option.enc_emb_dim, option.enc_hid_dim, option.enc_n_layers_group1, option.enc_n_directions_group2, option.enc_dropout,
-        trg_vocab_size, option.dec_emb_dim, option.dec_hid_dim, option.dec_n_layers_group1, option.dec_n_directions_group1, option.dec_dropout
+        src_vocab_size, option.enc_emb_dim, option.enc_hid_dim, option.enc_n_layers, option.enc_n_directions, option.enc_dropout,
+        trg_vocab_size, option.dec_emb_dim, option.dec_hid_dim, option.dec_n_layers, option.dec_n_directions, option.dec_dropout
     )
 
     def init_weights(m):

@@ -28,15 +28,11 @@ def get_parser():
     parser.add_argument('--enc_dropout', type = float, default = 0.5, help = '')
     parser.add_argument('--dec_dropout', type = float, default = 0.5, help = '')
 
-    parser.add_argument('--enc_n_layers_group1', type = int, default = 1, help = '')
-    parser.add_argument('--dec_n_layers_group1', type = int, default = 1, help = '')
-    parser.add_argument('--enc_n_layers_group2', type = int, default = 2, help = '')
-    parser.add_argument('--dec_n_layers_group2', type = int, default = 2, help = '')
+    parser.add_argument('--enc_n_layers', type = int, default = 1, help = '')
+    parser.add_argument('--dec_n_layers', type = int, default = 1, help = '')
 
-    parser.add_argument('--enc_n_directions_group1', type = int, default = 1, help = '')
-    parser.add_argument('--dec_n_directions_group1', type = int, default = 1, help = '')
-    parser.add_argument('--enc_n_directions_group2', type = int, default = 2, help = '')
-    parser.add_argument('--dec_n_directions_group2', type = int, default = 2, help = '')
+    parser.add_argument('--enc_n_directions', type = int, default = 1, help = '')
+    parser.add_argument('--dec_n_directions', type = int, default = 1, help = '')
 
     # For Train
     parser.add_argument('--module', type = int, choices = range(1, 7), default = 1, help = '')
