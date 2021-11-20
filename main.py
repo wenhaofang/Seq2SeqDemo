@@ -29,9 +29,13 @@ root_path = 'result'
 
 logs_folder = os.path.join(root_path, 'logs', option.name)
 save_folder = os.path.join(root_path, 'save', option.name)
+sample_folder = os.path.join(root_path, 'sample', option.name)
+result_folder = os.path.join(root_path, 'result', option.name)
 
 subprocess.run('mkdir -p %s' % logs_folder, shell = True)
 subprocess.run('mkdir -p %s' % save_folder, shell = True)
+subprocess.run('mkdir -p %s' % sample_folder, shell = True)
+subprocess.run('mkdir -p %s' % result_folder, shell = True)
 
 logs_path = os.path.join(logs_folder, 'main.log' )
 save_path = os.path.join(save_folder, 'best.ckpt')
@@ -46,7 +50,7 @@ from modules.module2 import get_module as get_module2
 from modules.module3 import get_module as get_module3
 from modules.module4 import get_module as get_module4
 
-from utils.all_you_need import train, valid, save_checkpoint, load_checkpoint
+from utils.misc import train, valid, save_checkpoint, load_checkpoint, save_sample
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -91,18 +95,30 @@ logger.info('start training!')
 
 best_valid_loss = float('inf')
 for epoch in range(option.num_epochs):
-    train_loss = train(option.module, seq2seq, train_loader, criterion, optimizer, device, option.grad_clip)
-    valid_loss = valid(option.module, seq2seq, valid_loader, criterion, device)
+    train_info = train(option.module, seq2seq, train_loader, criterion, optimizer, device, option.grad_clip)
+    valid_info = valid(option.module, seq2seq, valid_loader, criterion, optimizer, device, trg_vocab)
     logger.info(
-        '[Epoch %d] Train Loss: %f, Valid Loss: %f' %
-        (epoch, train_loss, valid_loss)
+        '[Epoch %d] Train Loss: %f, Valid Loss: %f, Valid BLEU: %f' %
+        (epoch, train_info['loss'], valid_info['loss'], valid_info['bleu'])
     )
-    if  best_valid_loss > valid_loss:
-        best_valid_loss = valid_loss
+    if  best_valid_loss > valid_info['loss']:
+        best_valid_loss = valid_info['loss']
         save_checkpoint(save_path, seq2seq, optimizer, epoch)
+        save_sample(sample_folder,
+            valid_info['reference_ids'], valid_info['hypothese_ids'],
+            valid_info['reference_wds'], valid_info['hypothese_wds']
+        )
 
 logger.info('start testing!')
 
 load_checkpoint(save_path, seq2seq, optimizer)
-test_loss = valid(option.module, seq2seq, test_loader, criterion, device)
-logger.info('Test Loss: %f' % test_loss)
+
+test_info = valid(option.module, seq2seq, test_loader, criterion, optimizer, device, trg_vocab)
+logger.info(
+    'Test Loss: %f, Test BLEU: %f' %
+    (test_info['loss'], test_info['bleu'])
+)
+save_sample(result_folder,
+    test_info['reference_ids'], test_info['hypothese_ids'],
+    test_info['reference_wds'], test_info['hypothese_wds']
+)
