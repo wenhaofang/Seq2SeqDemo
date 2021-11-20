@@ -44,10 +44,10 @@ def build_vocab(data, min_freq, max_numb):
     vocab['id2word'] = {idx: word for idx, word in enumerate(words)}
     vocab['word2id'] = {word: idx for idx, word in enumerate(words)}
     vocab['special'] = {
-        'SOS_TOKEN': '<SOS>',
-        'EOS_TOKEN': '<EOS>',
-        'UNK_TOKEN': '<UNK>',
-        'PAD_TOKEN': '<PAD>'
+        'SOS_TOKEN': SOS_TOKEN,
+        'EOS_TOKEN': EOS_TOKEN,
+        'UNK_TOKEN': UNK_TOKEN,
+        'PAD_TOKEN': PAD_TOKEN
     }
     return vocab
 
