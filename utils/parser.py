@@ -34,6 +34,12 @@ def get_parser():
     parser.add_argument('--enc_n_directions', type = int, default = 1, help = '')
     parser.add_argument('--dec_n_directions', type = int, default = 1, help = '')
 
+    parser.add_argument('--enc_kernel_size', type = int, default = 3, help = '')
+    parser.add_argument('--dec_kernel_size', type = int, default = 3, help = '')
+
+    parser.add_argument('--enc_filter_layers', type = int, default = 10, help = '')
+    parser.add_argument('--dec_filter_layers', type = int, default = 10, help = '')
+
     # For Train
     parser.add_argument('--module', type = int, choices = range(1, 7), default = 1, help = '')
 
