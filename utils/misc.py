@@ -37,12 +37,22 @@ def train(module_id, model, loader, criterion, optimizer, device, clip):
         mini_batch = [data_item.to(device) for data_item in mini_batch]
         if module_id in [1, 2, 3]:
             source, target = mini_batch
-            source, target = source.transpose(0, 1), target.transpose(0, 1)
+            source = source.transpose(0, 1)
+            target = target.transpose(0, 1)
             output = model(source, target)
         if module_id in [4]:
-            source, source_length, target, target_length = mini_batch
-            source, target = source.transpose(0, 1), target.transpose(0, 1)
+            source, source_length, target, _ = mini_batch
+            source = source.transpose(0, 1)
+            target = target.transpose(0, 1)
             output = model(source, source_length, target)
+        if module_id in [5, 6]:
+            source, target = mini_batch
+            source = source[:, :-1]
+            target = target[:, :-1]
+            output = model(source, target)
+            source = source.transpose(0, 1)
+            target = target.transpose(0, 1)
+            output = output.transpose(0, 1)
         loss = criterion(
             output[1:].reshape(-1, output.shape[-1]),
             target[1:].reshape(-1)
@@ -68,12 +78,22 @@ def valid(module_id, model, loader, criterion, optimizer, device, vocab):
             mini_batch = [data_item.to(device) for data_item in mini_batch]
             if module_id in [1, 2, 3]:
                 source, target = mini_batch
-                source, target = source.transpose(0, 1), target.transpose(0, 1)
+                source = source.transpose(0, 1)
+                target = target.transpose(0, 1)
                 output = model(source, target, 0)
             if module_id in [4]:
-                source, source_length, target, target_length = mini_batch
-                source, target = source.transpose(0, 1), target.transpose(0, 1)
+                source, source_length, target, _ = mini_batch
+                source = source.transpose(0, 1)
+                target = target.transpose(0, 1)
                 output = model(source, source_length, target, 0)
+            if module_id in [5, 6]:
+                source, target = mini_batch
+                source = source[:, :-1]
+                target = target[:, :-1]
+                output = model(source, target)
+                source = source.transpose(0, 1)
+                target = target.transpose(0, 1)
+                output = output.transpose(0, 1)
             loss = criterion(
                 output[1:].reshape(-1, output.shape[-1]),
                 target[1:].reshape(-1)

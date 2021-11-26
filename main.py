@@ -49,6 +49,8 @@ from modules.module1 import get_module as get_module1
 from modules.module2 import get_module as get_module2
 from modules.module3 import get_module as get_module3
 from modules.module4 import get_module as get_module4
+from modules.module5 import get_module as get_module5
+from modules.module6 import get_module as get_module6
 
 from utils.misc import train, valid, save_checkpoint, load_checkpoint, save_sample
 
@@ -59,7 +61,9 @@ logger.info('prepare loader')
 if (
     option.module == 1 or
     option.module == 2 or
-    option.module == 3
+    option.module == 3 or
+    option.module == 5 or
+    option.module == 6
 ):
     src_vocab, trg_vocab, train_loader, valid_loader, test_loader = get_loader1(option)
 elif (
@@ -83,6 +87,10 @@ elif option.module == 3:
     seq2seq = get_module3(option, src_vocab_size, trg_vocab_size)
 elif option.module == 4:
     seq2seq = get_module4(option, src_vocab_size, trg_vocab_size, src_padded_idx)
+elif option.module == 5:
+    seq2seq = get_module5(option, src_vocab_size, trg_vocab_size, trg_padded_idx, device)
+elif option.module == 6:
+    seq2seq = get_module6(option, src_vocab_size, trg_vocab_size, src_padded_idx, trg_padded_idx, device)
 
 seq2seq = seq2seq.to(device)
 
