@@ -23,8 +23,10 @@ def get_parser():
 
     parser.add_argument('--enc_emb_dim', type = int, default = 256, help = '')
     parser.add_argument('--dec_emb_dim', type = int, default = 256, help = '')
+
     parser.add_argument('--enc_hid_dim', type = int, default = 512, help = '')
     parser.add_argument('--dec_hid_dim', type = int, default = 512, help = '')
+
     parser.add_argument('--enc_dropout', type = float, default = 0.5, help = '')
     parser.add_argument('--dec_dropout', type = float, default = 0.5, help = '')
 
@@ -39,6 +41,15 @@ def get_parser():
 
     parser.add_argument('--enc_filter_layers', type = int, default = 10, help = '')
     parser.add_argument('--dec_filter_layers', type = int, default = 10, help = '')
+
+    parser.add_argument('--enc_attention_heads', type = int, default = 8, help = '')
+    parser.add_argument('--dec_attention_heads', type = int, default = 8, help = '')
+
+    parser.add_argument('--enc_transformer_layers', type = int, default = 3, help = '')
+    parser.add_argument('--dec_transformer_layers', type = int, default = 3, help = '')
+
+    parser.add_argument('--enc_mid_dim', type = int, default = 512, help = '')
+    parser.add_argument('--dec_mid_dim', type = int, default = 512, help = '')
 
     # For Train
     parser.add_argument('--module', type = int, choices = range(1, 7), default = 1, help = '')
